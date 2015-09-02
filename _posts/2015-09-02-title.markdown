@@ -1,5 +1,5 @@
 ---
-published: false
+published: true
 title: title
 layout: post
 tags: [tag1]
@@ -23,4 +23,3 @@ Hello World
 
     
     code
-    
