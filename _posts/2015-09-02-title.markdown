@@ -9,28 +9,9 @@ Hello World
 -------------------
 
 
-<table border="1">
-    <tr>
-        <td>Foo</td>
-    </tr>
-</table>
+This is a little WebApp helper, for those who want to experiment with 7-segment displays, and draw numbers or even a few other symbols and letters.  
 
-<ol>
-<li>Bird</li>
-<li>McHale</li>
-<li>Parish</li>
-</ol>
-
-    
-    code
-
-
-<div class='post-body entry-content' id='post-body-1093155099788522971' itemprop='description articleBody'>
-This is a little WebApp helper, for those who want to experiment with 7-segment displays, and draw numbers or even a few other symbols and letters.<br />
-
-It will generate the arduino code for you. For it just draw the symbol you want, give it a description name and click save to add it to the list. Then use the Generate Code button.
-<br />
-<br />
+It will generate the arduino code for you. For it just draw the symbol you want, give it a description name and click save to add it to the list. Then use the Generate Code button.  
 
 
 <style type="text/css">
@@ -444,11 +425,13 @@ Display.prototype.getValue = function(value){
 </script>
 
 
+Example code
+----------------------
 
-<br>
-<h3>Example code</h3>
-<p>I wrote a sample code that you can use as example.</p>
-<p>Also avaliable on GitHub <a href="https://github.com/victornpb/display7">https://github.com/victornpb/display7</a> </p>
+I wrote a sample code that you can use as example.  
+Also avaliable on GitHub <https://github.com/victornpb/display7>
+
+
 <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?skin=default&lang=html&lang=js&lang=css&lang=cpp"></script>
 
 <pre class="prettyprint" style="font-size: 9pt">
