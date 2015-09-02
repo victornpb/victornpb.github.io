@@ -9,7 +9,7 @@ Hello World
 -------------------
 
 
-<table>
+<table border="1">
     <tr>
         <td>Foo</td>
     </tr>
