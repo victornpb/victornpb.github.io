@@ -23,3 +23,501 @@ Hello World
 
     
     code
+
+
+<div class='post-body entry-content' id='post-body-1093155099788522971' itemprop='description articleBody'>
+This is a little WebApp helper, for those who want to experiment with 7-segment displays, and draw numbers or even a few other symbols and letters.<br />
+
+It will generate the arduino code for you. For it just draw the symbol you want, give it a description name and click save to add it to the list. Then use the Generate Code button.
+<br />
+<br />
+
+
+<style type="text/css">
+.display7{
+ display:inline-block;
+ background-color: #000;
+ padding: 1em;
+ 
+ font: Monaco, "Panic Sans", Consolas, "Courier New", monospace;
+ font-size: 12pt;
+ color: transparent;
+}
+.display7:hover{
+ color: #666;
+}
+
+.display7 .a
+.display7 .b,
+.display7 .c,
+.display7 .d,
+.display7 .e,
+.display7 .f,
+.display7 .g,{
+ text-align: center;
+}
+
+.display7 div{
+ background-color: #121;
+ text-align: center;
+ cursor: pointer;
+}
+
+.display7 div:hover{
+ outline: 1px outset #0F0;
+}
+
+.a, .g, .g{
+ width: 4em;
+}
+
+.b, .c, .e, .f{
+ width: 1em;
+ height: 4em;
+}
+
+.display7 div.on{
+ background-color: #CF0;
+}
+
+#panel{
+ text-align: center;
+ background: #999;
+ padding: 1em;
+}
+
+#animationPanel, #storagePanel{
+ display: inline-block;
+ border: 0px solid gray;
+ height:auto;
+}
+
+textarea{
+ text-align: left;
+}
+</style>
+
+<div id="panel">
+ <div id="digit1" class="display7">
+   <table>
+  <tr>
+   <td></td>
+   <td><div class="a">A</div></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td><div class="f">F</div></td>
+   <td></td>
+   <td><div class="b">B</div></td>
+  </tr>
+  <tr>
+   <td></td>
+   <td><div class="g">G</div></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td><div class="e">E</div></td>
+   <td></td>
+   <td><div class="c">C</div></td>
+  </tr>
+  <tr>
+   <td></td>
+   <td><div class="d">D</div></td>
+   <td></td>
+  </tr>
+   </table>
+ </div>
+
+ <br />
+ 
+ <div>
+  <input id="dispData" type="text"><input type="button" value="SET" onclick="writeDisplay(dispData.value)"/><br />
+  <input type="button" value="CLEAR" onclick="writeDisplay('0000000')"/>
+ </div>
+
+        <div>
+           <fieldset>
+               <legend>Add character to List</legend>
+               <input type="text" id="animName" placeholder="character name"/>
+               <button onclick="saveChar()">Save</button>
+           </fieldset>
+        </div>
+</div>
+
+<br>
+<br>
+
+<span id="storagePanel">
+<fieldset>
+<legend>Saved characters</legend>
+ <select id="savedList" size="16" onchange="loadChar()"></select>
+ <button onclick="loadChar()" style="display:none;">Load</button>
+ <button onclick="deleteChar()">Remove Selected</button>
+</fieldset>
+</span>
+
+<br />
+<br />
+
+<span id="codePanel">
+ <fieldset>
+ <legend>Arduino Code</legend>
+  <button onclick="generateCode()">Generate Code</button>
+  <br />
+  <textarea id="code" cols="80" rows="25"></textarea>
+ </fieldset>
+</span>
+
+
+<script type="text/javascript">
+
+var playing, t, d1, d2;
+var savedAnimations = {};
+
+function saveChar(){
+ 
+ var charObj = {
+  name: animName.value?animName.value:prompt("Type a character name","8")||0,
+  data: d1.getValue()
+ }
+ 
+ savedAnimations[charObj.name] = charObj;
+ 
+ savedList.innerHTML = "";
+ for(var a in savedAnimations){
+  var opt = document.createElement('option');
+  opt.innerHTML = savedAnimations[a].data+" &#8594; "+a;
+  opt.value = a;
+  savedList.appendChild(opt);
+ }
+ 
+ window.localStorage.setItem('savedChars', JSON.stringify(savedAnimations));
+}
+
+function loadChar(){
+ var a = savedAnimations[savedList.value];
+ writeDisplay(a.data);
+}
+
+function deleteChar(){
+ if(savedList.value){
+  var a = savedAnimations[savedList.value];
+  delete savedAnimations[a.name];
+  
+  savedList.innerHTML = "";
+  for(var a in savedAnimations){
+   var opt = document.createElement('option');
+   opt.innerHTML = savedAnimations[a].data+" &#8594; "+a;
+   opt.value = a;
+   savedList.appendChild(opt);
+  }
+  
+  window.localStorage.setItem('savedChars', JSON.stringify(savedAnimations) );
+ }
+}
+
+
+function generateCode(){
+ 
+ var text = "byte dictionary[] = {\n";
+ 
+ var i=0;
+ for(var a in savedAnimations){
+  text += '    B'+savedAnimations[a].data+', \t// ['+i+'] => "'+a+'"\n';
+  ++i;
+ }
+ text += '};';
+ 
+ code.value = text;
+}
+
+function pushB(){
+ anim.value += d1.getValue()+"\n";
+}
+
+
+function play(){
+ 
+ if(!playing==true){
+ 
+  var sequence = anim.value.split(/\n/);
+  var i=0;
+  var r = parseInt(repeat.value);
+  
+  console.log('animation started');
+  
+  t = setInterval( function(){
+   
+   if(sequence[i]){
+    console.log('animation frame', i, sequence[i]);
+    playing = true;
+    
+    var bytes = sequence[i];//.split(" ");
+    
+    writeDisplay(bytes);
+    ++i;
+   }
+   else{
+    if(r>=0){
+     i=0;
+     --r;
+     console.log('animation repeat');
+    }else{
+     clearInterval(t);
+     playing = false;
+     console.log('animation ended.');
+    }
+   }
+   
+   
+  }, parseInt(speed.value));
+ }
+ else console.log('already playing!');
+}
+
+function stop(){
+ playing=false;
+ clearInterval(t);
+ console.log('animation canceled');
+}
+
+/**
+ * Add a event to a element;
+ * @param {Object} element Element or ID;
+ * @param {String} trigger Trigger to fire action eg:load,click,mouseover,etc;
+ * @param {Function} action A pointer to a function to be called on trigger;
+ */
+function addEvent(element, trigger, action){
+ if(typeof element==="string"){element=document.getElementById(element);}
+ if(element.addEventListener){
+  element.addEventListener(trigger,action,false);
+  return true;
+ }
+ else if(element.attachEvent){
+  element['e'+trigger+action] = action;
+  element[trigger+action] = function() { element['e'+trigger+action]( window.event );}
+  var r = element.attachEvent('on'+trigger, element[trigger+action]);
+  return r;
+ }
+ else{
+  element['on'+trigger] = action;
+  return true;
+ }
+}
+
+/* JAVASCRIPT GOES HERE */
+addEvent(window, 'load', function(){
+  d1 = new Display(digit1);
+  
+  writeDisplay("1111111");
+  
+  d1.onChange = function(){
+   dispData.value = d1.getValue();
+  }
+  
+ //Load saved animations to memory
+ var storage = window.localStorage.getItem('savedChars');
+ if(!storage){
+  storage  ='{"0":{"name":"0","data":"1111110"},"1":{"name":"1","data":"0110000"},"2":{"name":"2","data":"1101101"},"3":{"name":"3","data":"1111001"},"4":{"name":"4","data":"0110011"},"5":{"name":"5","data":"1011011"},"6":{"name":"6","data":"1011111"},"7":{"name":"7","data":"1110000"},"8":{"name":"8","data":"1111111"},"9":{"name":"9","data":"1111011"},"A":{"name":"A","data":"1110111"},"dash":{"name":"dash","data":"0000001"}}';
+ }
+ if(storage){
+  savedAnimations = JSON.parse(storage);
+  for(var a in savedAnimations){
+   var opt = document.createElement('option');
+   opt.innerHTML = savedAnimations[a].data+" &#8594; "+a;;
+   opt.value = a;
+   savedList.appendChild(opt);
+  }
+ }
+ 
+ 
+ 
+});
+
+
+
+function writeDisplay(bytes){
+ d1.setValue(bytes);
+ dispData.value = bytes;
+}
+
+/*
+*  Counter.js  - written by Victor N - 22/Nov/2013 - www.vitim.us
+*/
+
+function Display(displayElement){
+ 
+ var self = this;
+ 
+ this.pos;
+ this.values = [0,1,2,3,4,5,6,7,8,9];
+ 
+ this.options = {
+  mousewheel: true,
+  digitHeight: 0,
+  inverted: false 
+ }
+ 
+ this.DOM = {
+  display : displayElement,
+  segments: [
+   displayElement.querySelector('.a'),
+   displayElement.querySelector('.b'),
+   displayElement.querySelector('.c'),
+   displayElement.querySelector('.d'),
+   displayElement.querySelector('.e'),
+   displayElement.querySelector('.f'),
+   displayElement.querySelector('.g')
+  ]
+ }
+ 
+ this.DOM.display.onclick=function(){
+  
+ }
+ 
+ for(var i=0; i<this.DOM.segments.length; ++i){
+  this.DOM.segments[i].onclick = function(){
+   this.classList.toggle("on");
+   
+   if(self.onChange) self.onChange();
+  }
+ }
+ 
+ /* 
+ //Initial Values
+ if(this.DOM.counter.innerHTML.indexOf('|')>-1){
+  this.values = this.DOM.counter.innerHTML.split('|');
+ }
+ this.DOM.counter.innerHTML = "";
+  
+ this.DOM.counter.classList.add('counter');
+ this.DOM.wheel.classList.add('wheel');
+ this.DOM.digitAbove.classList.add('digit');
+ this.DOM.digitCenter.classList.add('digit');
+ this.DOM.digitBelow.classList.add('digit');
+ this.DOM.digitAbove.classList.add('above');
+ this.DOM.digitCenter.classList.add('center');
+ this.DOM.digitBelow.classList.add('below');
+ 
+ this.DOM.counter.appendChild(this.DOM.wheel);
+ this.DOM.wheel.appendChild(this.DOM.digitAbove);
+ this.DOM.wheel.appendChild(this.DOM.digitCenter);
+ this.DOM.wheel.appendChild(this.DOM.digitBelow);
+ 
+ //compute digit height
+ //this.options.digitHeight = this.DOM.digitCenter.offsetHeight;
+ this.options.digitHeight = parseInt(window.getComputedStyle(this.DOM.digitCenter, null).getPropertyValue("height"));
+ this.setPos(0);
+ 
+ this.DOM.counter.onmousewheel = this.mouseWheel();
+ */
+ 
+}
+
+Display.prototype.setValue = function(value){
+ 
+ if(typeof value=="number")
+  value = value.toString();
+ 
+ for(var i=0; i<this.DOM.segments.length; ++i){
+  
+  var b = value.charAt(i);
+  if(b=="1")
+   this.DOM.segments[i].classList.add("on");
+  else
+   this.DOM.segments[i].classList.remove("on");
+ }
+ 
+}
+
+
+Display.prototype.getValue = function(value){
+ 
+ var byte=[];
+ 
+ for(var i=0; i<this.DOM.segments.length; ++i){
+  byte.push( this.DOM.segments[i].classList.contains("on")?1:0)
+ }
+ 
+ return byte.join('');
+}
+</script>
+
+
+
+<br>
+<h3>Example code</h3>
+<p>I wrote a sample code that you can use as example.</p>
+<p>Also avaliable on GitHub <a href="https://github.com/victornpb/display7">https://github.com/victornpb/display7</a> </p>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?skin=default&lang=html&lang=js&lang=css&lang=cpp"></script>
+
+<pre class="prettyprint" style="font-size: 9pt">
+/**
+ * 7-segments display example code
+ * 
+ * This code is distributed under The MIT License (MIT)
+ * Copyright (c) 2014 victornpb - www.vitim.us
+ * created on 18-nov-2014
+ */
+
+#define C_ANODE false
+const uint8_t myDisplayPins[8] = {3,4,5,6,7,8,9,10}; //dp A B C D E F G
+
+byte font[] = {
+  B1111110, //[0] => "0"
+  B0110000, //[1] => "1"
+  B1101101, //[2] => "2"
+  B1111001, //[3] => "3"
+  B0110011, //[4] => "4"
+  B1011011, //[5] => "5"
+  B1011111, //[6] => "6"
+  B1110000, //[7] => "7"
+  B1111111, //[8] => "8"
+  B1111011, //[9] => "9"
+  B1110111, //[10] => "A"
+  B0000001, //[11] => "dash"
+};
+
+void setup(){
+ display7Setup(myDisplayPins); //configure myDisplayPins as outputs
+}
+
+void loop(){
+  
+  display7(myDisplayPins, font[0]); //display "0"
+  delay(1000);
+  display7(myDisplayPins, font[9]); //display "A"
+  delay(1000);
+  display7(myDisplayPins, font[11]); //display "-"
+  delay(1000);
+  display7(myDisplayPins, B00000000); //turn all segments OFF
+  delay(1000);
+
+  //count 0 to 9
+  for(int i=0; i<=9; i++){
+    display7(myDisplayPins, font[i]);
+    delay(1000);
+  }
+}
+
+/* Configure pins as outputs */
+void display7Setup(const uint8_t displayPins[]){
+  for(uint8_t i=0; i<8; ++i){
+    pinMode(displayPins[i], OUTPUT);
+  }
+}
+
+/* Function that writes a bitmap to a 7-segment display */
+void display7(const uint8_t displayPins[], byte bitmap){
+  if (C_ANODE) { bitmap = ~bitmap; }
+  for (uint8_t i=0; i<8; ++i) {
+    digitalWrite(displayPins[7-i], (bitmap & 0x1)?HIGH:LOW);
+    bitmap >>= 1;
+  }
+}
+</pre>
+
+<span style="font-size: 8pt; font-family: courier-new">
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+</span>
